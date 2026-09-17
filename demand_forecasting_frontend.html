@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DemandIQ — Intelligent Demand Forecasting</title>
+<style>
+:root{
+  --bg:#f5f7fb;--surface:#fff;--text:#172033;--muted:#718096;--line:#e7ebf2;
+  --primary:#5b5ce2;--primary2:#7c3aed;--green:#10b981;--red:#ef4444;--amber:#f59e0b;
+  --shadow:0 10px 30px rgba(25,35,60,.08);--radius:18px;
+}
+*{box-sizing:border-box} body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text)}
+button,input,select{font:inherit}.app{display:flex;min-height:100vh}
+.sidebar{width:245px;background:#111827;color:#dbe3f0;padding:24px 16px;position:fixed;inset:0 auto 0 0}
+.brand{display:flex;align-items:center;gap:11px;padding:5px 10px 30px;font-weight:800;font-size:20px;color:white}
+.logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--primary),var(--primary2));display:grid;place-items:center}
+.nav{display:grid;gap:6px}.nav button{border:0;background:transparent;color:#aeb9cb;text-align:left;padding:13px 14px;border-radius:11px;cursor:pointer}
+.nav button:hover,.nav button.active{background:#252d40;color:#fff}.nav button span{margin-right:10px}
+.sidebar-bottom{position:absolute;bottom:24px;left:20px;right:20px;font-size:12px;color:#7f8ba0;line-height:1.6}
+main{margin-left:245px;width:calc(100% - 245px);padding:28px 34px}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px}
+.title h1{margin:0;font-size:28px}.title p{margin:6px 0 0;color:var(--muted)}
+.actions{display:flex;gap:10px}.btn{border:0;border-radius:11px;padding:11px 16px;cursor:pointer;font-weight:700}
+.btn.primary{background:linear-gradient(135deg,var(--primary),var(--primary2));color:white;box-shadow:0 8px 18px rgba(91,92,226,.22)}
+.btn.light{background:white;border:1px solid var(--line);color:#4a5568}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:18px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.metric{padding:19px}.metric-top{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:13px}
+.metric-icon{width:38px;height:38px;border-radius:10px;background:#eef0ff;display:grid;place-items:center}.metric-value{font-size:27px;font-weight:800;margin:12px 0 5px}.metric small{color:var(--green);font-weight:700}
+.grid{display:grid;grid-template-columns:2fr 1fr;gap:18px;margin-bottom:18px}.card-pad{padding:20px}
+.card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.card-head h2{font-size:17px;margin:0}.muted{color:var(--muted);font-size:13px}
+.chart-wrap{height:290px;position:relative}.chart-wrap canvas{width:100%;height:100%}
+.legend{display:flex;gap:20px;margin-top:8px;color:var(--muted);font-size:12px}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
+.upload{border:2px dashed #c9cdf6;border-radius:14px;padding:27px;text-align:center;background:#fafaff;cursor:pointer;transition:.2s}
+.upload:hover{border-color:var(--primary);background:#f4f4ff}.upload-icon{font-size:35px}.upload h3{margin:8px 0 5px}.upload p{margin:0;color:var(--muted);font-size:13px}
+.file-name{margin-top:12px;font-size:13px;font-weight:700;color:var(--primary);min-height:18px}
+.config{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}.field label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px}
+.field select{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;background:white;color:var(--text)}
+.table-card{overflow:hidden}.table{width:100%;border-collapse:collapse}.table th,.table td{text-align:left;padding:14px 18px;border-top:1px solid var(--line);font-size:13px}.table th{font-size:11px;text-transform:uppercase;color:var(--muted);letter-spacing:.05em;background:#fafbfe}.badge{padding:5px 9px;border-radius:99px;font-size:11px;font-weight:800}.badge.up{background:#e8faf3;color:#07875f}.badge.down{background:#fff0f0;color:#c93434}.badge.stable{background:#fff7df;color:#9a6a00}
+.alert{display:flex;gap:11px;padding:13px;border-radius:12px;margin-bottom:10px;background:#fff8e8;border:1px solid #fde9b2}.alert.critical{background:#fff0f0;border-color:#ffd0d0}.alert.success{background:#eafaf4;border-color:#c8f1df}.alert strong{font-size:13px}.alert p{margin:4px 0 0;color:var(--muted);font-size:12px}
+.features{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.feature{padding:16px;border:1px solid var(--line);border-radius:13px;background:#fafbfe}.feature b{display:block;margin-bottom:6px;font-size:13px}.feature p{margin:0;color:var(--muted);font-size:12px;line-height:1.5}
+.status{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--green);font-weight:700}.pulse{width:8px;height:8px;background:var(--green);border-radius:50%}
+.toast{position:fixed;right:25px;bottom:25px;background:#111827;color:white;padding:13px 17px;border-radius:11px;box-shadow:var(--shadow);opacity:0;transform:translateY(15px);pointer-events:none;transition:.25s;font-size:13px}.toast.show{opacity:1;transform:none}
+@media(max-width:1100px){.metrics{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.features{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:760px){.sidebar{width:68px;padding:18px 9px}.brand span,.nav button:not(.active) span:last-child,.sidebar-bottom{display:none}.brand{padding:5px 5px 25px}.nav button{font-size:0;text-align:center}.nav button span{font-size:18px;margin:0}main{margin-left:68px;width:calc(100% - 68px);padding:20px 14px}.metrics{grid-template-columns:1fr 1fr}.topbar{align-items:flex-start;gap:12px}.actions{flex-direction:column}.config{grid-template-columns:1fr}.features{grid-template-columns:1fr}.table-card{overflow:auto}.table{min-width:650px}}
+@media(max-width:480px){.metrics{grid-template-columns:1fr}.title h1{font-size:22px}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand"><div class="logo">📊</div><span>DemandIQ</span></div>
+  <nav class="nav">
+    <button class="active" onclick="setSection(this)"><span>⌂</span><span>Dashboard</span></button>
+    <button onclick="setSection(this)"><span>📈</span><span>Forecasts</span></button>
+    <button onclick="setSection(this)"><span>📦</span><span>Inventory</span></button>
+    <button onclick="setSection(this)"><span>⚠️</span><span>Anomalies</span></button>
+    <button onclick="setSection(this)"><span>⚙️</span><span>Settings</span></button>
+  </nav>
+  <div class="sidebar-bottom">AI-powered time-series forecasting<br>Retail & Supply Chain<br><br>Codeathon 2026</div>
+</aside>
+
+<main>
+  <div class="topbar">
+    <div class="title"><h1>Demand Forecasting Dashboard</h1><p>Monitor demand, forecast future sales and optimize inventory.</p></div>
+    <div class="actions">
+      <button class="btn light" onclick="loadSample()">Load Sample Data</button>
+      <button class="btn primary" onclick="runForecast()">▶ Run Forecast</button>
+    </div>
+  </div>
+
+  <section class="metrics">
+    <div class="card metric"><div class="metric-top"><span>Forecast Accuracy</span><div class="metric-icon">🎯</div></div><div class="metric-value" id="accuracy">—</div><small id="accuracyNote">Awaiting first run</small></div>
+    <div class="card metric"><div class="metric-top"><span>Products Analyzed</span><div class="metric-icon">📦</div></div><div class="metric-value" id="products">—</div><small id="productsNote">No data loaded</small></div>
+    <div class="card metric"><div class="metric-top"><span>Anomalies Detected</span><div class="metric-icon">🔎</div></div><div class="metric-value" id="anomalies">—</div><small id="anomaliesNote" style="color:var(--amber)">No data loaded</small></div>
+    <div class="card metric"><div class="metric-top"><span>Potential Savings</span><div class="metric-icon">💰</div></div><div class="metric-value" id="savings">—</div><small id="savingsNote">Capital tied up in overstock</small></div>
+  </section>
+
+  <section class="grid">
+    <div class="card card-pad">
+      <div class="card-head"><div><h2>Demand Forecast</h2><span class="muted" id="chartSubtitle">Historical sales vs predicted demand</span></div><span class="status" id="status"><span class="pulse"></span> Connecting…</span></div>
+      <div class="chart-wrap"><canvas id="forecastChart"></canvas></div>
+      <div class="legend"><span><i class="dot" style="background:#5b5ce2"></i>Historical</span><span><i class="dot" style="background:#7c3aed"></i>Forecast</span><span><i class="dot" style="background:#ded9fb"></i>Confidence band</span></div>
+    </div>
+    <div class="card card-pad">
+      <div class="card-head"><h2>Upload Data</h2><span class="muted">CSV</span></div>
+      <label class="upload" for="fileInput" id="dropzone">
+        <div class="upload-icon">📁</div><h3>Drop CSV here</h3><p>or click to browse</p><p style="margin-top:8px">sales_history.csv • inventory_data.csv</p>
+        <div class="file-name" id="fileName"></div>
+      </label>
+      <input id="fileInput" type="file" accept=".csv" hidden onchange="handleFile(this)">
+      <div class="config">
+        <div class="field"><label>Forecast Horizon</label><select id="horizon"><option>7 days</option><option>14 days</option><option selected>30 days</option><option>60 days</option><option>90 days</option></select></div>
+        <div class="field"><label>Confidence</label><select id="confidence"><option>80%</option><option selected>90%</option><option>95%</option><option>99%</option></select></div>
+        <div class="field"><label>Algorithm</label><select id="model"><option value="auto" selected>Auto (best backtest)</option><option value="ridge">Ridge + Fourier seasonality</option><option value="holt_winters">Holt-Winters</option><option value="seasonal_naive">Seasonal naive</option><option value="moving_average">Moving average</option><option value="ensemble">Weighted ensemble</option></select></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid">
+    <div class="card table-card">
+      <div class="card-pad card-head"><div><h2>Top Demand Predictions</h2><span class="muted">Highest expected changes</span></div></div>
+      <table class="table"><thead><tr><th>Product</th><th>Forecast Change</th><th>Trend</th><th>Action</th></tr></thead>
+      <tbody id="predictionRows"><tr><td colspan="4" class="muted" style="padding:22px">Run a forecast to see predictions.</td></tr></tbody></table>
+    </div>
+    <div class="card card-pad">
+      <div class="card-head"><h2>Inventory Alerts</h2></div>
+      <div id="alerts"><div class="alert"><span>💡</span><div><strong>No forecast yet</strong><p>Load the sample data or upload a CSV, then run the forecast.</p></div></div></div>
+    </div>
+  </section>
+
+  <section class="card card-pad" style="margin-bottom:18px">
+    <div class="card-head"><div><h2>Inventory Recommendations</h2><span class="muted">Suggested actions from current forecast</span></div><button class="btn light" onclick="exportResults()">Export CSV</button></div>
+    <table class="table"><thead><tr><th>Product</th><th>Recommended Action</th><th>Stock Status</th><th>Forecast</th></tr></thead>
+    <tbody id="recoRows"><tr><td colspan="4" class="muted" style="padding:22px">Run a forecast to see inventory recommendations.</td></tr></tbody></table>
+  </section>
+
+  <section class="card card-pad">
+    <div class="card-head"><div><h2>System Capabilities</h2><span class="muted">What the forecasting agent can analyze</span></div></div>
+    <div class="features">
+      <div class="feature"><b>📊 Historical Sales</b><p>Analyze past sales patterns, trends and demand drivers.</p></div>
+      <div class="feature"><b>⏰ Time-Series Processing</b><p>Handle daily, weekly, monthly and seasonal patterns.</p></div>
+      <div class="feature"><b>🤖 Demand Prediction</b><p>Generate future demand estimates using ML models.</p></div>
+      <div class="feature"><b>📈 Trend Detection</b><p>Identify upward, downward and stable demand trends.</p></div>
+      <div class="feature"><b>🔄 Seasonality</b><p>Detect recurring patterns and seasonal fluctuations.</p></div>
+      <div class="feature"><b>🚨 Anomaly Handling</b><p>Flag unusual sales, promotions and outliers.</p></div>
+      <div class="feature"><b>📦 Inventory Advice</b><p>Recommend restocking, reduction and maintenance actions.</p></div>
+      <div class="feature"><b>🛡️ Risk Assessment</b><p>Evaluate stockout and overstock risk.</p></div>
+    </div>
+  </section>
+</main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ------------------------------------------------------------------
+   DemandIQ frontend - talks to the Flask API in app.py
+   ------------------------------------------------------------------ */
+const API = location.origin.startsWith('http') ? '' : 'http://127.0.0.1:5000';
+const state = { datasetId: null, result: null, chart: null };
+
+const $ = id => document.getElementById(id);
+const nf = n => (n ?? 0).toLocaleString('en-IN');
+const money = n => n >= 1e7 ? '₹' + (n/1e7).toFixed(1) + 'Cr'
+                 : n >= 1e5 ? '₹' + (n/1e5).toFixed(1) + 'L'
+                 : '₹' + Math.round(n).toLocaleString('en-IN');
+
+async function api(path, options = {}) {
+  const res = await fetch(API + path, options);
+  const data = await res.json().catch(() => ({ error: 'Server returned a non-JSON response.' }));
+  if (!res.ok || data.ok === false) throw new Error(data.error || ('Request failed: ' + res.status));
+  return data;
+}
+
+/* ---------------------------- chart ------------------------------- */
+const canvas = $('forecastChart'), ctx = canvas.getContext('2d');
+function resizeCanvas(){
+  const r = canvas.getBoundingClientRect(), d = devicePixelRatio || 1;
+  canvas.width = r.width * d; canvas.height = r.height * d;
+  ctx.setTransform(d, 0, 0, d, 0, 0); drawChart();
+}
+function drawChart(){
+  const w = canvas.clientWidth, h = canvas.clientHeight, p = { l: 44, r: 18, t: 15, b: 30 };
+  ctx.clearRect(0, 0, w, h);
+  const c = state.chart;
+  if (!c) {
+    ctx.fillStyle = '#8a94a6'; ctx.font = '13px Segoe UI'; ctx.textAlign = 'center';
+    ctx.fillText('Load data and run a forecast to see the chart', w / 2, h / 2);
+    ctx.textAlign = 'left'; return;
+  }
+  const hist = c.history, fc = c.forecast, lo = c.lower, hi = c.upper;
+  const all = hist.concat(hi, lo);
+  let max = Math.max(...all), min = Math.min(...all);
+  const pad = (max - min) * 0.12 || 1; max += pad; min = Math.max(0, min - pad);
+  const total = hist.length + fc.length - 1;
+  const x = i => p.l + (w - p.l - p.r) * i / total;
+  const y = v => p.t + (h - p.t - p.b) * (1 - (v - min) / (max - min || 1));
+
+  ctx.font = '11px Segoe UI'; ctx.fillStyle = '#8a94a6'; ctx.strokeStyle = '#edf0f5';
+  for (let i = 0; i < 5; i++){
+    const yy = p.t + (h - p.t - p.b) * i / 4;
+    ctx.beginPath(); ctx.moveTo(p.l, yy); ctx.lineTo(w - p.r, yy); ctx.stroke();
+    ctx.fillText(Math.round(max - (max - min) * i / 4), 4, yy + 4);
+  }
+
+  // confidence band
+  const off = hist.length - 1;
+  ctx.beginPath();
+  hi.forEach((v, i) => { const xx = x(off + 1 + i), yy = y(v); i ? ctx.lineTo(xx, yy) : ctx.moveTo(xx, yy); });
+  for (let i = lo.length - 1; i >= 0; i--) ctx.lineTo(x(off + 1 + i), y(lo[i]));
+  ctx.closePath(); ctx.fillStyle = 'rgba(124,58,237,.14)'; ctx.fill();
+
+  const line = (vals, startIdx, color, dash = []) => {
+    ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.setLineDash(dash); ctx.beginPath();
+    vals.forEach((v, i) => { const xx = x(startIdx + i), yy = y(v); i ? ctx.lineTo(xx, yy) : ctx.moveTo(xx, yy); });
+    ctx.stroke(); ctx.restore();
+  };
+  line(hist, 0, '#5b5ce2');
+  line([hist[hist.length - 1]].concat(fc), off, '#7c3aed', [6, 5]);
+
+  ctx.fillStyle = '#8a94a6';
+  const labels = c.labels || [];
+  labels.forEach((l, i) => {
+    ctx.fillText(l.text, Math.min(Math.max(x(l.index) - 16, 2), w - 46), h - 7);
+  });
+}
+window.addEventListener('resize', resizeCanvas);
+
+function buildChart(chart){
+  const labels = [];
+  const histLen = chart.history.length, span = histLen + chart.forecast.length;
+  const every = Math.ceil(span / 6);
+  chart.history_dates.forEach((d, i) => { if (i % every === 0) labels.push({ index: i, text: d.slice(5) }); });
+  labels.push({ index: histLen - 1, text: 'today' });
+  chart.forecast_dates.forEach((d, i) => { if ((i + 1) % every === 0) labels.push({ index: histLen + i, text: d.slice(5) }); });
+  state.chart = { ...chart, labels };
+  drawChart();
+}
+
+/* ---------------------------- rendering --------------------------- */
+const badge = trend => trend === 'Increasing' ? '<span class="badge up">↑ Rising</span>'
+  : trend === 'Decreasing' ? '<span class="badge down">↓ Falling</span>'
+  : '<span class="badge stable">→ Stable</span>';
+const stockBadge = s => s === 'Optimal' ? '<span class="badge up">Optimal</span>'
+  : s === 'Overstock' ? '<span class="badge stable">Overstock</span>'
+  : `<span class="badge down">${s}</span>`;
+
+function render(data){
+  state.result = data;
+  const o = data.overview;
+
+  $('accuracy').textContent = o.avg_accuracy_pct ? o.avg_accuracy_pct + '%' : 'n/a';
+  $('accuracyNote').textContent = `${data.config.model_requested} · ${data.config.horizon}-day horizon`;
+  $('products').textContent = nf(o.products_analyzed);
+  $('productsNote').textContent = `${nf(data.preparation.periods)} periods analysed`;
+  $('anomalies').textContent = nf(o.anomalies_detected);
+  $('anomaliesNote').textContent = `${o.anomalies_high_severity} need review`;
+  $('savings').textContent = o.tied_up_capital ? money(o.tied_up_capital) : nf(o.excess_units) + ' u';
+  $('savingsNote').textContent = o.excess_units ? `${nf(o.excess_units)} units above target stock` : 'No overstock detected';
+
+  $('status').innerHTML = '<span class="pulse"></span> ' + data.chart.model;
+  $('chartSubtitle').textContent = `${data.chart.product} · history vs ${data.config.horizon}-day forecast (${data.config.confidence_pct}% interval)`;
+  buildChart(data.chart);
+
+  $('predictionRows').innerHTML = data.table.slice(0, 8).map(r => `
+    <tr>
+      <td><b>${r.product}</b><div class="muted">${r.model} · ${r.accuracy_pct ?? '—'}% accurate</div></td>
+      <td>${r.change_units >= 0 ? '+' : ''}${nf(r.change_units)} units<div class="muted">${r.change_pct}% vs recent</div></td>
+      <td>${badge(r.trend)}</td>
+      <td>${r.action}</td>
+    </tr>`).join('');
+
+  $('recoRows').innerHTML = data.table.map(r => `
+    <tr>
+      <td>${r.product}</td>
+      <td>${r.suggested_order_qty > 0 ? 'Order ' + nf(r.suggested_order_qty) + ' units' : r.action}
+          <div class="muted">Reorder point ${nf(r.reorder_point)} · safety stock ${nf(r.safety_stock)}</div></td>
+      <td>${stockBadge(r.stock_status)}<div class="muted">${r.days_of_cover ?? '—'} days cover</div></td>
+      <td>${nf(r.forecast_units)} units<div class="muted">${r.seasonality} pattern · ${r.anomalies} anomalies</div></td>
+    </tr>`).join('');
+
+  $('alerts').innerHTML = o.alerts.map(a => `
+    <div class="alert ${a.level === 'critical' ? 'critical' : a.level === 'success' ? 'success' : ''}">
+      <span>${a.icon}</span><div><strong>${a.title}</strong><p>${a.detail}</p></div>
+    </div>`).join('') || '<div class="alert success"><span>✅</span><div><strong>Everything on track</strong><p>No stockout or overstock risk in this horizon.</p></div></div>';
+}
+
+/* ---------------------------- actions ----------------------------- */
+function toast(msg){
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(window.tt); window.tt = setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+async function handleFile(input){
+  const file = input.files[0];
+  if (!file) return;
+  $('fileName').textContent = '⏳ Uploading ' + file.name;
+  const body = new FormData(); body.append('file', file);
+  try {
+    const data = await api('/api/upload', { method: 'POST', body });
+    state.datasetId = data.dataset_id;
+    $('fileName').textContent = `✓ ${data.name} · ${nf(data.rows)} rows · ${data.products} products`;
+    toast('File loaded. Run the forecast when ready.');
+  } catch (err) {
+    $('fileName').textContent = '✗ ' + err.message;
+    toast(err.message);
+  }
+}
+
+async function loadSample(){
+  toast('Generating sample sales history…');
+  try {
+    const data = await api('/api/sample', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ days: 730 })
+    });
+    state.datasetId = data.dataset_id;
+    $('fileName').textContent = `✓ ${data.name} · ${nf(data.rows)} rows · ${data.products} products`;
+    toast(`Sample data loaded: ${data.date_range[0]} to ${data.date_range[1]}.`);
+    runForecast();
+  } catch (err) { toast(err.message); }
+}
+
+async function runForecast(){
+  if (!state.datasetId) return toast('Load the sample data or upload a CSV first.');
+  $('status').innerHTML = '<span class="pulse"></span> Running…';
+  toast('Forecasting…');
+  try {
+    const data = await api('/api/forecast', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        dataset_id: state.datasetId,
+        horizon: $('horizon').value,
+        confidence: $('confidence').value,
+        model: $('model').value
+      })
+    });
+    render(data);
+    toast(`Forecast ready in ${data.runtime_seconds}s · ${data.overview.products_analyzed} products.`);
+  } catch (err) {
+    $('status').innerHTML = '<span class="pulse" style="background:var(--red)"></span> Failed';
+    toast(err.message);
+  }
+}
+
+function exportResults(){
+  if (!state.datasetId || !state.result) return toast('Run a forecast before exporting.');
+  window.location = API + '/api/export/' + state.datasetId + '.csv';
+  toast('Downloading recommendations…');
+}
+
+function setSection(btn){
+  document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const name = btn.innerText.trim();
+  const targets = { Forecasts: '.grid', Inventory: '#recoRows', Anomalies: '#alerts', Settings: '.config' };
+  const el = document.querySelector(targets[name] || 'main');
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+/* drag and drop */
+const dz = $('dropzone');
+['dragover', 'dragleave', 'drop'].forEach(evt => dz.addEventListener(evt, e => {
+  e.preventDefault();
+  dz.style.borderColor = evt === 'dragover' ? 'var(--primary)' : '#c9cdf6';
+  if (evt === 'drop' && e.dataTransfer.files.length) {
+    $('fileInput').files = e.dataTransfer.files;
+    handleFile($('fileInput'));
+  }
+}));
+
+/* boot */
+resizeCanvas();
+api('/api/health')
+  .then(h => { $('status').innerHTML = '<span class="pulse"></span> ' + h.service + ' ready'; })
+  .catch(() => {
+    $('status').innerHTML = '<span class="pulse" style="background:var(--red)"></span> Backend offline';
+    toast('Backend not reachable. Start it with: python app.py');
+  });
+</script>
+</body>
+</html>
